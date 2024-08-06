@@ -42,15 +42,18 @@ permissions:
       - easyarmorstands.copy
       - easyarmorstands.destroy.armorstand
       - easyarmorstands.destroy.blockdisplay
+      - easyarmorstands.destroy.interaction
       - easyarmorstands.destroy.itemdisplay
       - easyarmorstands.destroy.textdisplay
       - easyarmorstands.edit.blockdisplay
+      - easyarmorstands.edit.interaction
       - easyarmorstands.edit.itemdisplay
       - easyarmorstands.edit.textdisplay
       - easyarmorstands.property.armorstand.marker
       - easyarmorstands.property.display.billboard
       - easyarmorstands.property.display.block
       - easyarmorstands.property.display.brightness
+      - easyarmorstands.property.display.glow.color
       - easyarmorstands.property.display.item
       - easyarmorstands.property.display.item.transform
       - easyarmorstands.property.display.rotation
@@ -65,6 +68,7 @@ permissions:
       - easyarmorstands.property.display.text.shadow
       - easyarmorstands.property.display.translation
       - easyarmorstands.property.glow
+      - easyarmorstands.property.interaction.responsive
       - easyarmorstands.property.invulnerable
       - easyarmorstands.property.name
       - easyarmorstands.property.name.visible
@@ -72,6 +76,7 @@ permissions:
       - easyarmorstands.redo
       - easyarmorstands.spawn.armorstand
       - easyarmorstands.spawn.blockdisplay
+      - easyarmorstands.spawn.interaction
       - easyarmorstands.spawn.itemdisplay
       - easyarmorstands.spawn.textdisplay
       - easyarmorstands.undo

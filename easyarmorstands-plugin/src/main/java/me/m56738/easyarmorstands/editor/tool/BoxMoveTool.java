@@ -3,15 +3,13 @@ package me.m56738.easyarmorstands.editor.tool;
 import me.m56738.easyarmorstands.api.editor.Snapper;
 import me.m56738.easyarmorstands.api.editor.tool.MoveTool;
 import me.m56738.easyarmorstands.api.editor.tool.MoveToolSession;
-import me.m56738.easyarmorstands.api.property.Property;
-import me.m56738.easyarmorstands.api.property.PropertyContainer;
-import me.m56738.easyarmorstands.api.property.type.EntityPropertyTypes;
 import me.m56738.easyarmorstands.api.util.PositionProvider;
 import me.m56738.easyarmorstands.api.util.RotationProvider;
+import me.m56738.easyarmorstands.editor.box.BoundingBoxEditor;
+import me.m56738.easyarmorstands.editor.box.BoundingBoxEditorSession;
 import me.m56738.easyarmorstands.message.Message;
 import me.m56738.easyarmorstands.util.Util;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,15 +17,13 @@ import org.joml.Quaterniondc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 
-public class EntityMoveTool implements MoveTool {
-    private final PropertyContainer properties;
-    private final Property<Location> locationProperty;
+public class BoxMoveTool implements MoveTool {
+    private final BoundingBoxEditor editor;
     private final PositionProvider positionProvider;
     private final RotationProvider rotationProvider;
 
-    public EntityMoveTool(PropertyContainer properties, PositionProvider positionProvider, RotationProvider rotationProvider) {
-        this.properties = properties;
-        this.locationProperty = properties.get(EntityPropertyTypes.LOCATION);
+    public BoxMoveTool(BoundingBoxEditor editor, PositionProvider positionProvider, RotationProvider rotationProvider) {
+        this.editor = editor;
         this.positionProvider = positionProvider;
         this.rotationProvider = rotationProvider;
     }
@@ -44,64 +40,70 @@ public class EntityMoveTool implements MoveTool {
 
     @Override
     public @NotNull MoveToolSession start() {
-        return new SessionImpl();
+        return new SessionImpl(editor.start());
     }
 
     @Override
     public boolean canUse(@NotNull Player player) {
-        return locationProperty.canChange(player);
+        return editor.canMove(player);
     }
 
-    private class SessionImpl extends AbstractToolSession implements MoveToolSession {
-        private final Location originalLocation;
-        private final Vector3dc originalPosition;
+    private static class SessionImpl implements MoveToolSession {
+        private final BoundingBoxEditorSession session;
+        private final Vector3dc center;
         private final Vector3d offset = new Vector3d();
 
-        public SessionImpl() {
-            super(properties);
-            this.originalLocation = locationProperty.getValue().clone();
-            this.originalPosition = Util.toVector3d(originalLocation);
+        public SessionImpl(BoundingBoxEditorSession session) {
+            this.session = session;
+            this.center = session.getBoundingBox().getCenter(new Vector3d());
         }
 
         @Override
         public void setChange(@NotNull Vector3dc change) {
             this.offset.set(change);
-            Location location = originalLocation.clone();
-            location.add(change.x(), change.y(), change.z());
-            locationProperty.setValue(location);
+            session.setCenter(center.add(change, new Vector3d(offset)));
         }
 
         @Override
         public void snapChange(@NotNull Vector3d change, @NotNull Snapper context) {
-            change.add(originalPosition);
+            change.add(center);
             context.snapPosition(change);
-            change.sub(originalPosition);
+            change.sub(center);
         }
 
         @Override
         public @NotNull Vector3dc getPosition() {
-            return Util.toVector3d(locationProperty.getValue());
+            return session.getBoundingBox().getCenter(new Vector3d());
         }
 
         @Override
         public void setPosition(@NotNull Vector3dc position) {
-            setChange(position.sub(originalPosition, offset));
+            setChange(position.sub(center, offset));
         }
 
         @Override
         public void revert() {
-            locationProperty.setValue(originalLocation);
+            session.revert();
+        }
+
+        @Override
+        public void commit(@Nullable Component description) {
+            session.commit(description);
+        }
+
+        @Override
+        public boolean isValid() {
+            return session.isValid();
         }
 
         @Override
         public @Nullable Component getStatus() {
-            return Util.formatLocation(locationProperty.getValue());
+            return Util.formatOffset(offset);
         }
 
         @Override
         public @Nullable Component getDescription() {
-            Component value = Util.formatLocation(locationProperty.getValue());
-            return Message.component("easyarmorstands.history.move", value);
+            return Message.component("easyarmorstands.history.move-box", Util.formatOffset(offset));
         }
     }
 }
